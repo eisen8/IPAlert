@@ -11,6 +11,12 @@ namespace IPAlert
     {
         private static readonly HttpClient _httpClient = new HttpClient();
         private const int MaxRetries = 5;
+        private Logger _logger;
+
+        public IPRetriever()
+        {
+            _logger = Logger.Instance;
+        }
 
         /// <summary>
         /// Attempts to get the public ip address
@@ -26,10 +32,12 @@ namespace IPAlert
                 try
                 {
                     HttpResponseMessage response = await _httpClient.GetAsync("https://api.ipify.org");
+                    int statusCode = (int)response.StatusCode;
 
-                    if (((int)response.StatusCode) >= 400 && ((int)response.StatusCode) < 500)
+                    if (statusCode >= 400 && statusCode < 500)
                     {
                         // Don't retry on 4XX errors
+                        _logger.Error($"Unsuccessful status code while getting public IP Address from ipify. Status Code: {statusCode}.");
                         return "Error";
                     }
 
@@ -37,6 +45,7 @@ namespace IPAlert
                 }
                 catch (Exception e)
                 {
+                    _logger.Error("Exception while running GetPublicIPAddress.", e);
                 }
 
                 retryCount++;

@@ -13,19 +13,29 @@ namespace IPAlert
         [STAThread]
         public static void Main()
         {
-            Application.EnableVisualStyles();
-            Application.SetCompatibleTextRenderingDefault(false);
-            _IPAlert = new IPAlert();
-            Application.ApplicationExit += (sender, e) =>
+            Logger logger = Logger.Instance;
+            logger.Init();
+            try
             {
-                if (_IPAlert != null)
+                logger.Info("Starting IPAlert Application");
+                Application.EnableVisualStyles();
+                Application.SetCompatibleTextRenderingDefault(false);
+                _IPAlert = new IPAlert();
+                Application.ApplicationExit += (sender, e) =>
                 {
-                    _IPAlert.Dispose();
-                    _IPAlert = null;
-                }
-            };
+                    if (_IPAlert != null)
+                    {
+                        _IPAlert.Dispose();
+                        _IPAlert = null;
+                    }
+                };
 
-            Application.Run();
+                Application.Run();
+            }
+            catch(Exception e)
+            {
+                logger.Error("Error starting IPAlert Application", e);
+            }
         }
     }
 }

@@ -12,12 +12,14 @@ namespace IPAlert
         private string _lastPublicIp = "";
         private NetworkAddressChangedEventHandler _networkChangedHandler;
         private IPRetriever _IPRetriever;
+        private Logger _logger;
         private bool _isUpdating = false;
         private object _lock = new object();
 
 
         public IPAlert()
         {
+            _logger = Logger.Instance;
             _IPRetriever = new IPRetriever();
 
             _trayIcon = new NotifyIcon
@@ -75,6 +77,7 @@ namespace IPAlert
         /// <param name="e">Event args</param>
         private async void onNetworkChanged(object? sender, EventArgs e)
         {
+            _logger.Info("onNetworkChanged event");
             UpdateIPAddress(true);
         }
 
@@ -118,7 +121,7 @@ namespace IPAlert
             }
             catch(Exception e)
             {
-                // Don't crash the program on error
+                _logger.Error("Error on UpdateIPAddress", e);
             }
             finally
             {
