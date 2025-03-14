@@ -1,0 +1,8 @@
+[Oo]bj/
+bin/
+
+
+.vs/
+.git/
+*.editorconfig
+*.user
