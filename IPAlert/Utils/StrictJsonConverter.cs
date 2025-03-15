@@ -9,7 +9,7 @@ namespace IPAlert.Utils
     /// I'm not sure why this is not available by default (using options) in System.Text.Json but we do what we must because we can.
     /// </summary>
     /// <typeparam name="T">The type</typeparam>
-    public class StrictPropertyCheckingConverter<T> : JsonConverter<T>
+    public class StrictJsonConverter<T> : JsonConverter<T>
     {
         public override T Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {

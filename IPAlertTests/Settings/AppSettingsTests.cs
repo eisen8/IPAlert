@@ -6,7 +6,7 @@ using NUnit.Framework;
 using IPAlert.Settings;
 using System.IO.Abstractions;
 
-namespace IPAlert.Services.Tests
+namespace IPAlertTests.Settings
 {
     [TestFixture]
     public class AppSettingsTests

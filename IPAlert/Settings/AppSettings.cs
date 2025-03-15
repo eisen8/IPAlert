@@ -27,7 +27,7 @@ namespace IPAlert.Settings
                 throw new FileNotFoundException($"Configuration file not found at {filePath}.", filePath);
 
             var options = new JsonSerializerOptions();
-            options.Converters.Add(new StrictPropertyCheckingConverter<AppSettings>());
+            options.Converters.Add(new StrictJsonConverter<AppSettings>());
 
             string json = fileSystem.File.ReadAllText(filePath);
             AppSettings? result = JsonSerializer.Deserialize<AppSettings>(json, options);
