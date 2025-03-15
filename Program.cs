@@ -1,3 +1,5 @@
+using Autofac;
+
 namespace IPAlert
 {
     /// <summary>
@@ -5,7 +7,8 @@ namespace IPAlert
     /// </summary>
     internal static class Program
     {
-        private static IPAlert? _IPAlert;
+        private static IPAlert? _ipAlert;
+        private static IContainer? _container;
 
         /// <summary>
         ///  The boilerplate Main entry point for the application.
@@ -13,20 +16,23 @@ namespace IPAlert
         [STAThread]
         public static void Main()
         {
-            Logger logger = Logger.Instance;
-            logger.Init();
+            Logger logger = new Logger();
+            logger.Info("Starting IPAlert Application");
             try
             {
-                logger.Info("Starting IPAlert Application");
+                // IOC
+                dependencyConfiguration(logger);
+
+                // Application 
                 Application.EnableVisualStyles();
                 Application.SetCompatibleTextRenderingDefault(false);
-                _IPAlert = new IPAlert();
+                _ipAlert = _container.Resolve<IPAlert>();
                 Application.ApplicationExit += (sender, e) =>
                 {
-                    if (_IPAlert != null)
+                    if (_ipAlert != null)
                     {
-                        _IPAlert.Dispose();
-                        _IPAlert = null;
+                        _ipAlert.Dispose();
+                        _ipAlert = null;
                     }
                 };
 
@@ -36,6 +42,16 @@ namespace IPAlert
             {
                 logger.Error("Error starting IPAlert Application", e);
             }
+        }
+
+        private static void dependencyConfiguration(Logger logger)
+        {
+            var builder = new ContainerBuilder();
+            builder.RegisterInstance<Logger>(logger).As<Logger>().SingleInstance();
+            builder.RegisterType<IPRetriever>().As<IPRetriever>().SingleInstance();
+            builder.RegisterType<IPAlert>().As<IPAlert>().SingleInstance();
+
+            _container = builder.Build();
         }
     }
 }

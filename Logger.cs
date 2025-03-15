@@ -6,13 +6,9 @@ namespace IPAlert
     /// <summary>
     /// Basic logger class using SeriLog
     /// </summary>
-    class Logger
+    public class Logger
     {
-        private static readonly Lazy<Logger> _instance = new(() => new Logger());
-        public static Logger Instance => _instance.Value;
-        private Logger() { }
-
-        public void Init()
+        public Logger()
         {
             Log.Logger = new LoggerConfiguration()
                 .WriteTo.File("./logs/ip_alert_logs.txt",

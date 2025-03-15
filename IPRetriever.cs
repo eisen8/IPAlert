@@ -1,8 +1,4 @@
-﻿using System.Diagnostics;
-using System.Net.NetworkInformation;
-using System.Net.Sockets;
-
-namespace IPAlert
+﻿namespace IPAlert
 {
     /// <summary>
     /// Class for retrieving IP addresses
@@ -13,9 +9,9 @@ namespace IPAlert
         private const int MaxRetries = 5;
         private Logger _logger;
 
-        public IPRetriever()
+        public IPRetriever(Logger logger)
         {
-            _logger = Logger.Instance;
+            _logger = logger;
         }
 
         /// <summary>

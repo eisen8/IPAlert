@@ -8,19 +8,21 @@ namespace IPAlert
     /// </summary>
     public class IPAlert : IDisposable
     {
+        private IPRetriever _ipRetriever;
+        private Logger _logger;
+
+
         private NotifyIcon _trayIcon;
         private string _lastPublicIp = "";
         private NetworkAddressChangedEventHandler _networkChangedHandler;
-        private IPRetriever _IPRetriever;
-        private Logger _logger;
         private bool _isUpdating = false;
         private object _lock = new object();
 
 
-        public IPAlert()
+        public IPAlert(Logger logger, IPRetriever ipRetriever)
         {
-            _logger = Logger.Instance;
-            _IPRetriever = new IPRetriever();
+            _logger = logger;
+            _ipRetriever = ipRetriever;
 
             _trayIcon = new NotifyIcon
             {
@@ -100,7 +102,7 @@ namespace IPAlert
             try
             {
                 Thread.Sleep(2000); // Wait before trying so that the network can settle down a bit
-                string publicIp = await _IPRetriever.GetPublicIPAddress();
+                string publicIp = await _ipRetriever.GetPublicIPAddress();
 
                 if (publicIp != _lastPublicIp)
                 {
