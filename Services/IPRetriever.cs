@@ -11,7 +11,7 @@ namespace IPAlert.Services
 
         private const int MAX_RETRIES = 3;
         private static readonly HttpClient _httpClient = new HttpClient();
-        private Logger _logger;
+        private readonly Logger _logger;
 
         public IPRetriever(Logger logger)
         {

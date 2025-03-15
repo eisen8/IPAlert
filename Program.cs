@@ -31,7 +31,7 @@ namespace IPAlert
                 Thread.CurrentThread.CurrentCulture = new CultureInfo("en-US");
 
                 // IOC
-                dependencyConfiguration(logger, settings);
+                _container = dependencyConfiguration(logger, settings);
 
                 // Application 
                 Application.EnableVisualStyles();
@@ -54,7 +54,7 @@ namespace IPAlert
             }
         }
 
-        private static void dependencyConfiguration(Logger logger, AppSettings settings)
+        private static IContainer dependencyConfiguration(Logger logger, AppSettings settings)
         {
             var builder = new ContainerBuilder();
             builder.RegisterInstance<Logger>(logger).As<Logger>().SingleInstance();
@@ -62,7 +62,7 @@ namespace IPAlert
             builder.RegisterType<IPRetriever>().As<IPRetriever>().SingleInstance();
             builder.RegisterType<IPAlert>().As<IPAlert>().SingleInstance();
 
-            _container = builder.Build();
+            return builder.Build();
         }
     }
 }

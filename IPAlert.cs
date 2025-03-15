@@ -14,18 +14,18 @@ namespace IPAlert
     /// </summary>
     public class IPAlert : IDisposable
     {
-        private AppSettings _settings;
-        private IPRetriever _ipRetriever;
-        private Logger _logger;
+        private readonly AppSettings _settings;
+        private readonly IPRetriever _ipRetriever;
+        private readonly Logger _logger;
 
 
-        private NotifyIcon _trayIcon;
+        private readonly NotifyIcon _trayIcon;
+        private readonly NetworkAddressChangedEventHandler? _networkChangedHandler;
+        private readonly Timer? _timer;
+        private readonly Lock _lock = new Lock();
+
         private string _lastPublicIp = IPRetriever.NO_CONNECTION_STRING;
-        private readonly NetworkAddressChangedEventHandler _networkChangedHandler;
-        private readonly Timer _timer;
-
         private bool _isUpdating = false;
-        private object _lock = new object();
 
 
         public IPAlert(AppSettings settings, Logger logger, IPRetriever ipRetriever)
@@ -47,7 +47,7 @@ namespace IPAlert
 
             if (_settings.Mode == IPAlertMode.OnNetworkChanges)
             {
-                _networkChangedHandler = async (sender, e) =>
+                _networkChangedHandler = (sender, e) =>
                 {
                     onNetworkChanged(sender, e);
                 };
@@ -62,27 +62,7 @@ namespace IPAlert
                 _timer.Start();
             }
                 // Initial check
-                UpdateIPAddress(false);
-        }
-
-        public void Dispose()
-        {
-            if (_networkChangedHandler != null)
-            {
-                NetworkChange.NetworkAddressChanged -= _networkChangedHandler;
-            }
-
-            if (_timer != null)
-            {
-                _timer.Stop();
-                _timer.Dispose();
-            }
-
-            if (_trayIcon != null)
-            {
-                _trayIcon.Visible = false;
-                _trayIcon.Dispose();
-            }
+                updateIPAddress(false);
         }
 
         /// <summary>
@@ -101,10 +81,10 @@ namespace IPAlert
         /// </summary>
         /// <param name="sender">sender arg</param>
         /// <param name="e">Event args</param>
-        private async void onNetworkChanged(object? sender, EventArgs e)
+        private void onNetworkChanged(object? sender, EventArgs e)
         {
             _logger.Info("onNetworkChanged event");
-            UpdateIPAddress(_settings.NotificationsEnabled);
+            updateIPAddress(_settings.NotificationsEnabled);
         }
 
         /// <summary>
@@ -112,17 +92,17 @@ namespace IPAlert
         /// </summary>
         /// <param name="sender">sender arg</param>
         /// <param name="e">Event args</param>
-        private async void onPollingTimer(object? sender, ElapsedEventArgs e)
+        private void onPollingTimer(object? sender, ElapsedEventArgs e)
         {
             _logger.Info("onPollingTimer event");
-            UpdateIPAddress(_settings.NotificationsEnabled);
+            updateIPAddress(_settings.NotificationsEnabled);
         }
 
         /// <summary>
         /// Updates the IP Address
         /// </summary>
         /// <param name="shouldNotify">Whether we should trigger a notification (balloon tip) on changes</param>
-        private async void UpdateIPAddress(bool shouldNotify = true)
+        private async void updateIPAddress(bool shouldNotify = true)
         {
             // This lock/isUpdating is to ensure only one check happens if multiple network events occur at once
             lock(_lock)
@@ -174,6 +154,53 @@ namespace IPAlert
             {
                 _isUpdating = false;
             }
+        }
+
+
+        private bool _disposed = false;
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (_disposed)
+            {
+                return;
+            }
+
+            if (disposing)
+            {
+                // Dispose of manages resources here
+                if (_networkChangedHandler != null)
+                {
+                    NetworkChange.NetworkAddressChanged -= _networkChangedHandler;
+                }
+
+                if (_timer != null)
+                {
+                    _timer.Stop();
+                    _timer.Dispose();
+                }
+
+                if (_trayIcon != null)
+                {
+                    _trayIcon.Visible = false;
+                    _trayIcon.Dispose();
+                }
+            }
+
+
+            // Free any unmanaged resources here
+
+            _disposed = true;
+        }
+
+        ~IPAlert()
+        {
+            Dispose(false);
         }
     }
 }
