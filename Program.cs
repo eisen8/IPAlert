@@ -1,5 +1,6 @@
 using Autofac;
 using IPAlert.Settings;
+using System.Globalization;
 
 namespace IPAlert
 {
@@ -23,6 +24,10 @@ namespace IPAlert
             {
                 AppSettings settings = AppSettings.LoadFromFile(Constants.SETTINGS_FILE_PATH);
 
+                // Localization
+                Thread.CurrentThread.CurrentUICulture = new CultureInfo("en-US");
+                Thread.CurrentThread.CurrentCulture = new CultureInfo("en-US");
+
                 // IOC
                 dependencyConfiguration(logger, settings);
 
@@ -43,7 +48,7 @@ namespace IPAlert
             }
             catch(Exception e)
             {
-                logger.Error("Error starting IPAlert Application", e);
+                logger.Error("Exception starting IPAlert Application", e);
             }
         }
 

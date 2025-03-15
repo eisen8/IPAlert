@@ -1,6 +1,7 @@
-﻿using IPAlert.Settings;
-using System.Net.NetworkInformation;
+﻿using System.Net.NetworkInformation;
 using System.Timers;
+using IPAlert.Resources;
+using IPAlert.Settings;
 using Timer = System.Timers.Timer;
 
 
@@ -17,7 +18,7 @@ namespace IPAlert
 
 
         private NotifyIcon _trayIcon;
-        private string _lastPublicIp = "";
+        private string _lastPublicIp = IPRetriever.NO_CONNECTION_STRING;
         private readonly NetworkAddressChangedEventHandler _networkChangedHandler;
         private readonly Timer _timer;
 
@@ -34,13 +35,13 @@ namespace IPAlert
             _trayIcon = new NotifyIcon
             {
                 Icon = new Icon(Constants.ICON_PATH),
-                Text = "Checking IP...",
+                Text = Resource.CheckingIP,
                 Visible = true,
                 ContextMenuStrip = new ContextMenuStrip()
             };
 
-            _trayIcon.ContextMenuStrip.Items.Add("Copy IP", null, (s, e) => copyPublicIPToClipboard());
-            _trayIcon.ContextMenuStrip.Items.Add("Exit", null, (s, e) => Application.Exit());
+            _trayIcon.ContextMenuStrip.Items.Add(Resource.CopyIP, null, (s, e) => copyPublicIPToClipboard());
+            _trayIcon.ContextMenuStrip.Items.Add(Resource.Exit, null, (s, e) => Application.Exit());
 
             if (_settings.Mode == IPAlertMode.OnNetworkChanges)
             {
@@ -87,7 +88,7 @@ namespace IPAlert
         /// </summary>
         private void copyPublicIPToClipboard()
         {
-            if (_lastPublicIp != "Error" && _lastPublicIp != "")
+            if (_lastPublicIp != IPRetriever.NO_CONNECTION_STRING)
             {
                 Clipboard.SetText(_lastPublicIp);
             }
@@ -107,6 +108,8 @@ namespace IPAlert
         /// <summary>
         /// Event that occurs on a polling timer
         /// </summary>
+        /// <param name="sender">sender arg</param>
+        /// <param name="e">Event args</param>
         private async void onPollingTimer(object? sender, ElapsedEventArgs e)
         {
             _logger.Info("onPollingTimer event");
@@ -142,18 +145,18 @@ namespace IPAlert
                     _lastPublicIp = publicIp;
 
                     // Update the tray text
-                    string trayText = $"IP: {publicIp}";
+                    string trayText = string.Format(Resource.IPDisplay, _lastPublicIp);
                     _trayIcon.Text = trayText;
 
                     // Trigger the notification
                     if (shouldNotify)
                     {
-                        if (_lastPublicIp == "No Connection")
+                        if (_lastPublicIp == IPRetriever.NO_CONNECTION_STRING)
                         {
-                            _trayIcon.BalloonTipTitle = "Connection Lost";
+                            _trayIcon.BalloonTipTitle = Resource.ConnectionLost;
                         } else
                         {
-                            _trayIcon.BalloonTipTitle = "IP Address Changed";
+                            _trayIcon.BalloonTipTitle = Resource.IPAddressChanged;
                             _trayIcon.BalloonTipText = trayText;
                         }
 
