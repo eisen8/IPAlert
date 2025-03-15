@@ -3,6 +3,7 @@ using IPAlert.Services;
 using IPAlert.Settings;
 using IPAlert.Utils;
 using System.Globalization;
+using System.IO.Abstractions;
 
 namespace IPAlert
 {
@@ -24,14 +25,12 @@ namespace IPAlert
             logger.Info("Starting IPAlert Application");
             try
             {
-                AppSettings settings = AppSettings.LoadFromFile(Constants.SETTINGS_FILE_PATH);
-
                 // Localization
                 Thread.CurrentThread.CurrentUICulture = new CultureInfo("en-US");
                 Thread.CurrentThread.CurrentCulture = new CultureInfo("en-US");
 
                 // IOC
-                _container = dependencyConfiguration(logger, settings);
+                _container = dependencyConfiguration(logger);
 
                 // Application 
                 Application.EnableVisualStyles();
@@ -54,13 +53,17 @@ namespace IPAlert
             }
         }
 
-        private static IContainer dependencyConfiguration(Logger logger, AppSettings settings)
+        private static IContainer dependencyConfiguration(Logger logger)
         {
+            FileSystem fs = new FileSystem();
+            AppSettings settings = AppSettings.LoadFromFile(Constants.SETTINGS_FILE_PATH, fs);
+
             var builder = new ContainerBuilder();
-            builder.RegisterInstance<Logger>(logger).As<Logger>().SingleInstance();
-            builder.RegisterInstance<AppSettings>(settings).As<AppSettings>().SingleInstance();
-            builder.RegisterType<IPRetriever>().As<IPRetriever>().SingleInstance();
-            builder.RegisterType<IPAlert>().As<IPAlert>().SingleInstance();
+            builder.RegisterInstance<Logger>(logger).AsSelf().SingleInstance();
+            builder.RegisterInstance<IFileSystem>(fs).As<IFileSystem>().SingleInstance();
+            builder.RegisterInstance<AppSettings>(settings).AsSelf().SingleInstance();
+            builder.RegisterType<IPRetriever>().AsSelf().SingleInstance();
+            builder.RegisterType<IPAlert>().AsSelf().SingleInstance();
 
             return builder.Build();
         }
