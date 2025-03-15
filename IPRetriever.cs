@@ -5,8 +5,8 @@
     /// </summary>
     public class IPRetriever
     {
+        private const int MAX_RETRIES = 3;
         private static readonly HttpClient _httpClient = new HttpClient();
-        private const int MaxRetries = 5;
         private Logger _logger;
 
         public IPRetriever(Logger logger)
@@ -20,10 +20,10 @@
         /// <returns>The IPAddress if retrieved or "Error" if there was an error.</returns>
         public async Task<string> GetPublicIPAddress()
         {
-            int delayMS = 3000;
+            int retryDelayMS = 1000;
             int retryCount = 0;
 
-            while (retryCount < MaxRetries)
+            while (retryCount < MAX_RETRIES)
             {
                 try
                 {
@@ -34,7 +34,7 @@
                     {
                         // Don't retry on 4XX errors
                         _logger.Error($"Unsuccessful status code while getting public IP Address from ipify. Status Code: {statusCode}.");
-                        return "Error";
+                        return "No Connection";
                     }
 
                     return await response.Content.ReadAsStringAsync();
@@ -45,13 +45,13 @@
                 }
 
                 retryCount++;
-                if (retryCount < MaxRetries)
+                if (retryCount < MAX_RETRIES)
                 {
-                    Thread.Sleep(delayMS);
+                    Thread.Sleep(retryDelayMS);
                 }
             }
 
-            return "Error";
+            return "No Connection";
         }
     }
 }

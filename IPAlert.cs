@@ -1,4 +1,7 @@
-﻿using System.Net.NetworkInformation;
+﻿using IPAlert.Settings;
+using System.Net.NetworkInformation;
+using System.Timers;
+using Timer = System.Timers.Timer;
 
 
 namespace IPAlert
@@ -8,25 +11,29 @@ namespace IPAlert
     /// </summary>
     public class IPAlert : IDisposable
     {
+        private AppSettings _settings;
         private IPRetriever _ipRetriever;
         private Logger _logger;
 
 
         private NotifyIcon _trayIcon;
         private string _lastPublicIp = "";
-        private NetworkAddressChangedEventHandler _networkChangedHandler;
+        private readonly NetworkAddressChangedEventHandler _networkChangedHandler;
+        private readonly Timer _timer;
+
         private bool _isUpdating = false;
         private object _lock = new object();
 
 
-        public IPAlert(Logger logger, IPRetriever ipRetriever)
+        public IPAlert(AppSettings settings, Logger logger, IPRetriever ipRetriever)
         {
+            _settings = settings;
             _logger = logger;
             _ipRetriever = ipRetriever;
 
             _trayIcon = new NotifyIcon
             {
-                Icon = new Icon("./resources/IPAlert_Icon.ico"),
+                Icon = new Icon(Constants.ICON_PATH),
                 Text = "Checking IP...",
                 Visible = true,
                 ContextMenuStrip = new ContextMenuStrip()
@@ -35,16 +42,24 @@ namespace IPAlert
             _trayIcon.ContextMenuStrip.Items.Add("Copy IP", null, (s, e) => copyPublicIPToClipboard());
             _trayIcon.ContextMenuStrip.Items.Add("Exit", null, (s, e) => Application.Exit());
 
-            _networkChangedHandler = async (sender, e) =>
+            if (_settings.Mode == IPAlertMode.OnNetworkChanges)
             {
-                onNetworkChanged(sender, e);
-            };
+                _networkChangedHandler = async (sender, e) =>
+                {
+                    onNetworkChanged(sender, e);
+                };
 
-
-            NetworkChange.NetworkAddressChanged += _networkChangedHandler;
-
-            // Initial check
-            UpdateIPAddress(false);
+                NetworkChange.NetworkAddressChanged += _networkChangedHandler;
+            }
+            else // Timed mode
+            {
+                _timer = new Timer(_settings.PollingTimeMs);
+                _timer.Elapsed += onPollingTimer;
+                _timer.AutoReset = true;
+                _timer.Start();
+            }
+                // Initial check
+                UpdateIPAddress(false);
         }
 
         public void Dispose()
@@ -52,6 +67,12 @@ namespace IPAlert
             if (_networkChangedHandler != null)
             {
                 NetworkChange.NetworkAddressChanged -= _networkChangedHandler;
+            }
+
+            if (_timer != null)
+            {
+                _timer.Stop();
+                _timer.Dispose();
             }
 
             if (_trayIcon != null)
@@ -80,7 +101,16 @@ namespace IPAlert
         private async void onNetworkChanged(object? sender, EventArgs e)
         {
             _logger.Info("onNetworkChanged event");
-            UpdateIPAddress(true);
+            UpdateIPAddress(_settings.NotificationsEnabled);
+        }
+
+        /// <summary>
+        /// Event that occurs on a polling timer
+        /// </summary>
+        private async void onPollingTimer(object? sender, ElapsedEventArgs e)
+        {
+            _logger.Info("onPollingTimer event");
+            UpdateIPAddress(_settings.NotificationsEnabled);
         }
 
         /// <summary>
@@ -101,7 +131,10 @@ namespace IPAlert
             }
             try
             {
-                Thread.Sleep(2000); // Wait before trying so that the network can settle down a bit
+                if (_settings.Mode == IPAlertMode.OnNetworkChanges)
+                    Thread.Sleep(_settings.PollingTimeMs); // Wait before trying so that the network can settle down a bit
+
+
                 string publicIp = await _ipRetriever.GetPublicIPAddress();
 
                 if (publicIp != _lastPublicIp)
@@ -115,15 +148,22 @@ namespace IPAlert
                     // Trigger the notification
                     if (shouldNotify)
                     {
-                        _trayIcon.BalloonTipTitle = "IP Address Updated";
-                        _trayIcon.BalloonTipText = trayText;
-                        _trayIcon.ShowBalloonTip(5000);
+                        if (_lastPublicIp == "No Connection")
+                        {
+                            _trayIcon.BalloonTipTitle = "Connection Lost";
+                        } else
+                        {
+                            _trayIcon.BalloonTipTitle = "IP Address Changed";
+                            _trayIcon.BalloonTipText = trayText;
+                        }
+
+                        _trayIcon.ShowBalloonTip(_settings.NotificationTimeMs);
                     }
                 }
             }
             catch(Exception e)
             {
-                _logger.Error("Error on UpdateIPAddress", e);
+                _logger.Error("Exception on UpdateIPAddress", e);
             }
             finally
             {

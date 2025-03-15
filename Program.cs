@@ -1,4 +1,5 @@
 using Autofac;
+using IPAlert.Settings;
 
 namespace IPAlert
 {
@@ -20,8 +21,10 @@ namespace IPAlert
             logger.Info("Starting IPAlert Application");
             try
             {
+                AppSettings settings = AppSettings.LoadFromFile(Constants.SETTINGS_FILE_PATH);
+
                 // IOC
-                dependencyConfiguration(logger);
+                dependencyConfiguration(logger, settings);
 
                 // Application 
                 Application.EnableVisualStyles();
@@ -44,10 +47,11 @@ namespace IPAlert
             }
         }
 
-        private static void dependencyConfiguration(Logger logger)
+        private static void dependencyConfiguration(Logger logger, AppSettings settings)
         {
             var builder = new ContainerBuilder();
             builder.RegisterInstance<Logger>(logger).As<Logger>().SingleInstance();
+            builder.RegisterInstance<AppSettings>(settings).As<AppSettings>().SingleInstance();
             builder.RegisterType<IPRetriever>().As<IPRetriever>().SingleInstance();
             builder.RegisterType<IPAlert>().As<IPAlert>().SingleInstance();
 
