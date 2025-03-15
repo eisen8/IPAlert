@@ -1,4 +1,6 @@
-﻿namespace IPAlert
+﻿using IPAlert.Utils;
+
+namespace IPAlert.Services
 {
     /// <summary>
     /// Class for retrieving IP addresses

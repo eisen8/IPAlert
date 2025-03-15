@@ -1,7 +1,7 @@
 ﻿using Serilog;
 using System.Diagnostics;
 
-namespace IPAlert
+namespace IPAlert.Utils
 {
     /// <summary>
     /// Basic logger class using SeriLog
