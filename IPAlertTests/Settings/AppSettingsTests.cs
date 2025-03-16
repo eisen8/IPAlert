@@ -18,6 +18,13 @@ namespace IPAlertTests.Settings
             ""PollingTimeMs"": 1000
         }";
 
+        private const string VALID_JSON_AUTO_MODE = @"{
+            ""NotificationsEnabled"": true,
+            ""NotificationTimeMs"": 5000,
+            ""Mode"": ""Auto"",
+            ""PollingTimeMs"": 1000
+        }";
+
         private const string INVALID_JSON = @"{{
             ""NotificationsEnabled"": true,
             ""NotificationTimeMs"": 5000,
@@ -77,6 +84,25 @@ namespace IPAlertTests.Settings
             Assert.That(settings.NotificationsEnabled, Is.True);
             Assert.That(settings.NotificationTimeMs, Is.EqualTo(5000));
             Assert.That(settings.Mode, Is.EqualTo(IPAlertMode.Timed));
+            Assert.That(settings.PollingTimeMs, Is.EqualTo(1000));
+        }
+
+        [Test]
+        public void LoadFromFile_ShouldDeserializeCorrectly_WhenFileIsValidAndModeIsAuto()
+        {
+            // Arrange
+            var mockFileSystem = new Mock<IFileSystem>();
+            mockFileSystem.Setup(fs => fs.File.Exists(FILE_PATH)).Returns(true);
+            mockFileSystem.Setup(fs => fs.File.ReadAllText(FILE_PATH)).Returns(VALID_JSON_AUTO_MODE);
+
+            // Act
+            var settings = AppSettings.LoadFromFile(FILE_PATH, mockFileSystem.Object);
+
+            // Assert
+            Assert.That(settings, Is.Not.Null);
+            Assert.That(settings.NotificationsEnabled, Is.True);
+            Assert.That(settings.NotificationTimeMs, Is.EqualTo(5000));
+            Assert.That(settings.Mode, Is.EqualTo(IPAlertMode.Auto));
             Assert.That(settings.PollingTimeMs, Is.EqualTo(1000));
         }
 

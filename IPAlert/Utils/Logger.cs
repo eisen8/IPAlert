@@ -11,7 +11,7 @@ namespace IPAlert.Utils
         public Logger()
         {
             Log.Logger = new LoggerConfiguration()
-                .WriteTo.File("./logs/ip_alert_logs.txt",
+                .WriteTo.File("./Logs/IPAlert_Logs.txt",
                 rollingInterval: RollingInterval.Day,
                 retainedFileCountLimit: 7) // Keep only the last 7 log files
                 .CreateLogger();

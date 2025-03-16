@@ -43,7 +43,7 @@ namespace IPAlert.Settings
 
     public enum IPAlertMode
     {
-        OnNetworkChanges,
+        Auto,
         Timed
     }
 }

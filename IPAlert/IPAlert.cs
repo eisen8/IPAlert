@@ -46,7 +46,7 @@ namespace IPAlert
             _trayIcon.ContextMenuStrip.Items.Add(Resource.CopyIP, null, (s, e) => copyPublicIPToClipboard());
             _trayIcon.ContextMenuStrip.Items.Add(Resource.Exit, null, (s, e) => Application.Exit());
 
-            if (_settings.Mode == IPAlertMode.OnNetworkChanges)
+            if (_settings.Mode == IPAlertMode.Auto)
             {
                 _networkChangedHandler = (sender, e) =>
                 {
@@ -139,7 +139,7 @@ namespace IPAlert
             }
             try
             {
-                if (_settings.Mode == IPAlertMode.OnNetworkChanges)
+                if (_settings.Mode == IPAlertMode.Auto)
                     Thread.Sleep(_settings.PollingTimeMs); // Wait before trying so that the network can settle down a bit
 
 
