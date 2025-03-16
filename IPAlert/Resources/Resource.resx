@@ -135,4 +135,7 @@
   <data name="IPDisplay" xml:space="preserve">
     <value>IP: {0}</value>
   </data>
+  <data name="NoConnection" xml:space="preserve">
+    <value>No Connection</value>
+  </data>
 </root>

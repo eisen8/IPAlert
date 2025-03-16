@@ -113,5 +113,14 @@ namespace IPAlert.Resources {
                 return ResourceManager.GetString("IPDisplay", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No Connection.
+        /// </summary>
+        internal static string NoConnection {
+            get {
+                return ResourceManager.GetString("NoConnection", resourceCulture);
+            }
+        }
     }
 }

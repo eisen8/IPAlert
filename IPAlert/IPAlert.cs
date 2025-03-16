@@ -37,7 +37,7 @@ namespace IPAlert
             _trayIcon = new NotifyIcon
             {
                 Icon = new Icon(Constants.ICON_PATH),
-                Text = Resource.CheckingIP,
+                Text = Resource.NoConnection,
                 Visible = true,
                 ContextMenuStrip = new ContextMenuStrip()
             };
@@ -125,19 +125,30 @@ namespace IPAlert
                 if (publicIp != _lastPublicIp)
                 {
                     _lastPublicIp = publicIp;
+                    string trayText = string.Format(Resource.IPDisplay, _lastPublicIp);
 
                     // Update the tray text
-                    string trayText = string.Format(Resource.IPDisplay, _lastPublicIp);
-                    _trayIcon.Text = trayText;
+                    if (_lastPublicIp == IPRetriever.NO_CONNECTION_STRING)
+                    {
+                        _trayIcon.Text = Resource.NoConnection;
+                    } 
+                    else
+                    {
+                        _trayIcon.Text = trayText;
+                    }
 
                     // Trigger the notification
                     if (shouldNotify)
                     {
                         if (_lastPublicIp == IPRetriever.NO_CONNECTION_STRING)
                         {
+
                             _trayIcon.BalloonTipTitle = Resource.ConnectionLost;
-                        } else
+                            _trayIcon.BalloonTipText = " ";
+                        }
+                        else
                         {
+
                             _trayIcon.BalloonTipTitle = Resource.IPAddressChanged;
                             _trayIcon.BalloonTipText = trayText;
                         }
