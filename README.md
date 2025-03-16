@@ -26,11 +26,14 @@ Right click options:
 ![Right click options](Images/RightClick.png)
 
 ## Configuration
-The Settings/appsettings.json file contains configuration settings. You must restart the app to refresh changes to the settings file.
+The ./Settings/appsettings.json file contains configuration settings. You must restart the app to refresh changes to the settings file.
 - **NotificationsEnabled**: If true will enable notifications on IP address changes. If false, it will not show notifications.
 - **NotificationTimeMs**: The time in milliseconds that the notification will display.
-- **Mode**: Either "Timed" or "OnNetworkChanges". Timed mode polls the IP Address at regular interval. OnNetworkChanges mode reacts to network change events.
-- **PollingTimeMs**: The time in milliseconds between polls in Timed mode.
+- **Mode**: Either "Timed" or "Auto". Timed mode polls the IP Address at regular interval. Auto mode responds to network change events.
+- **PollingTimeMs**: The time in milliseconds between polls in Timed mode. Should be at least 1000 (1 second) to avoid throttling.
+
+## Logs
+Logs are stored in the ./Logs/ folder. The logs are rolled over daily and retained for 7 days. **No IP addresses, mac addresses, device Ids, or personal information is stored in the logs.**  
 
 ## Dependencies
 - Windows 10/11
