@@ -18,10 +18,11 @@ namespace IPAlert
         private readonly IPRetriever _ipRetriever;
         private readonly Logger _logger;
 
-
         private readonly NotifyIcon _trayIcon;
         private readonly NetworkAddressChangedEventHandler? _networkChangedHandler;
-        private readonly Timer? _timer;
+        private readonly Timer? _pollingTimer;
+        private readonly Timer _followUpTimerShort;
+        private readonly Timer _followUpTimerLong;
         private readonly Lock _lock = new Lock();
 
         private string _lastPublicIp = IPRetriever.NO_CONNECTION_STRING;
@@ -56,13 +57,23 @@ namespace IPAlert
             }
             else // Timed mode
             {
-                _timer = new Timer(_settings.PollingTimeMs);
-                _timer.Elapsed += onPollingTimer;
-                _timer.AutoReset = true;
-                _timer.Start();
+                _pollingTimer = new Timer(_settings.PollingTimeMs);
+                _pollingTimer.Elapsed += onPollingTimer;
+                _pollingTimer.AutoReset = true;
+                _pollingTimer.Start();
             }
-                // Initial check
-                updateIPAddress(false);
+
+            // Setup followup timers
+            _followUpTimerShort = new Timer(5000);
+            _followUpTimerShort.Elapsed += onFollowUpTimer;
+            _followUpTimerShort.AutoReset = false;
+            _followUpTimerLong = new Timer(15000);
+            _followUpTimerLong.Elapsed += onFollowUpTimer;
+            _followUpTimerLong.AutoReset = false;
+
+
+            // Initial check
+            updateIPAddress(false);
         }
 
         /// <summary>
@@ -79,30 +90,42 @@ namespace IPAlert
         /// <summary>
         /// Event that occurs on network events
         /// </summary>
-        /// <param name="sender">sender arg</param>
+        /// <param name="sender">Sender</param>
         /// <param name="e">Event args</param>
         private void onNetworkChanged(object? sender, EventArgs e)
         {
             _logger.Info("onNetworkChanged event");
-            updateIPAddress(_settings.NotificationsEnabled);
+            updateIPAddress(_settings.NotificationsEnabled, true);
         }
 
         /// <summary>
         /// Event that occurs on a polling timer
         /// </summary>
-        /// <param name="sender">sender arg</param>
+        /// <param name="sender">Sender</param>
         /// <param name="e">Event args</param>
         private void onPollingTimer(object? sender, ElapsedEventArgs e)
         {
             _logger.Info("onPollingTimer event");
-            updateIPAddress(_settings.NotificationsEnabled);
+            updateIPAddress(_settings.NotificationsEnabled, false);
+        }
+
+        /// <summary>
+        /// Event that occurs on a follow up timer
+        /// </summary>
+        /// <param name="sender">Sender</param>
+        /// <param name="e">Event args</param>
+        private void onFollowUpTimer(object? sender, ElapsedEventArgs e)
+        {
+            _logger.Info("onFollowUpTimer event");
+            updateIPAddress(_settings.NotificationsEnabled, false);
         }
 
         /// <summary>
         /// Updates the IP Address
         /// </summary>
         /// <param name="shouldNotify">Whether we should trigger a notification (balloon tip) on changes</param>
-        private async void updateIPAddress(bool shouldNotify = true)
+        /// <param name="shouldFollowUp">If true does a followup check (on a timer).</param>
+        private async void updateIPAddress(bool shouldNotify = true, bool shouldFollowUp = false)
         {
             // This lock/isUpdating is to ensure only one check happens if multiple network events occur at once
             lock(_lock)
@@ -155,9 +178,18 @@ namespace IPAlert
 
                         _trayIcon.ShowBalloonTip(_settings.NotificationTimeMs);
                     }
+
+                    // Followup Timers
+                    if (shouldFollowUp)
+                    {
+                        _followUpTimerShort.Stop(); 
+                        _followUpTimerShort.Start();
+                        _followUpTimerLong.Stop();
+                        _followUpTimerLong.Start();
+                    }
                 }
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 _logger.Error("Exception on UpdateIPAddress", e);
             }
@@ -190,10 +222,22 @@ namespace IPAlert
                     NetworkChange.NetworkAddressChanged -= _networkChangedHandler;
                 }
 
-                if (_timer != null)
+                if (_pollingTimer != null)
                 {
-                    _timer.Stop();
-                    _timer.Dispose();
+                    _pollingTimer.Stop();
+                    _pollingTimer.Dispose();
+                }
+
+                if (_followUpTimerShort != null)
+                {
+                    _followUpTimerShort.Stop();
+                    _followUpTimerShort.Dispose();
+                }
+
+                if (_followUpTimerLong != null)
+                {
+                    _followUpTimerLong.Stop();
+                    _followUpTimerLong.Dispose();
                 }
 
                 if (_trayIcon != null)

@@ -61,15 +61,6 @@ namespace IPAlert.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Checking IP....
-        /// </summary>
-        internal static string CheckingIP {
-            get {
-                return ResourceManager.GetString("CheckingIP", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Connection Lost.
         /// </summary>
         internal static string ConnectionLost {
